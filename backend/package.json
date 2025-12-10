@@ -5,10 +5,12 @@
   "scripts": {
     "start": "node --trace-warnings --watch app.js",
     "start:e2e": "cross-env NODE_ENV=test node app.js",
+    "start:prod": "pm2 startOrRestart ecosystem.config.js --env production",
     "test:dev": "jest --runInBand --watch",
     "test:ci": "jest --coverage --ci --silent",
     "lint": "eslint . --fix --ignore-pattern .gitignore",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "audit:ci": "npm audit --audit-level=high"
   },
   "keywords": [],
   "author": "",

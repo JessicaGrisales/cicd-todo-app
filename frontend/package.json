@@ -4,17 +4,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "cross-env VITE_COVERAGE='false' run-p type-check \"build-only {@}\" --",
+    "build:only": "vite build",
+    "build:test": "vite build --mode test",
     "preview": "vite preview",
-    "test:unit": "vitest",
+    "preview:test": "vite preview --mode test --port 4173",
     "e2e:open": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'",
-    "e2e:run": "start-server-and-test 'vite build --mode test && vite preview --mode test --port 4173' http://localhost:4173 'cypress run --browser chrome --e2e'",
-    "build-only": "vite build",
+    "e2e:run:chrome": "start-server-and-test 'vite build --mode test && vite preview --mode test --port 4173' http://localhost:4173 'cypress run --browser chrome --e2e'",
+    "e2e:run:firefox": "start-server-and-test 'vite build --mode test && vite preview --mode test --port 4173' http://localhost:4173 'cypress run --browser firefox --e2e'",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-    "lint": "eslint . --fix --ignore-pattern .gitignore",
-    "lint2": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "lint": "eslint ./src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-pattern .gitignore",
     "format": "prettier --write src/",
-    "lint-help": "eslint --help"
+    "audit": "npm audit",
+    "audit:ci": "npm audit --audit-level=high",
+    "report:coverage": "nyc report --reporter=lcov --report-dir coverage"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
