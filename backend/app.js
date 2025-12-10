@@ -31,9 +31,12 @@ function createApp() {
   app.use(router);
 
   // TEST-ONLY helper: reset DB between specs
-  if (process.env.NODE_ENV === 'test') {
+  /*if (process.env.NODE_ENV === 'test') {
     const testApi = require('./routes/test.api');
     app.use('/test', testApi);
+  }*/
+  if (process.env.NODE_ENV !== 'test') {
+    process.loadEnvFile('./.env');
   }
 
   // Fallback to SPA index
