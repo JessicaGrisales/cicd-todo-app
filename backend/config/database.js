@@ -21,17 +21,17 @@ async function connectDB() {
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
     
-    await mongoose.connect(mongoUri, {
+    await mongoose.connect(mongoUri, { //Se connecte avec
       serverSelectionTimeoutMS: 5000
     });
     
     console.info('Connected to in-memory MongoDB for testing');
   } else {
-    if (!process.env.MONGODB_URL) {
+    if (!process.env.MONGODB_URL) {// 3a. Vérification de la variable d'environnement
       throw new Error('Missing MONGODB_URL environment variable');
     }
     
-    await mongoose.connect(process.env.MONGODB_URL, {
+    await mongoose.connect(process.env.MONGODB_URL, {// 3b. Connexion utilisant la variable
       maxPoolSize: 5,
       minPoolSize: 0,
       serverSelectionTimeoutMS: 30000,
@@ -75,3 +75,4 @@ module.exports = {
   clearDatabase,
   mongoose
 };
+console.info('Connected to MongoDB');
