@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const { authenticateToken } = require('../middlewares');
-const { createUser, getUser, editUser, deleteCurrentUser } =
-  require('../controllers').UserController;
+const { createUser, getUser, editUser, deleteCurrentUser } = require('../controllers').UserController;
 
 // Handle the API request
 router.post('/', createUser);
