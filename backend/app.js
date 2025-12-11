@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 // Load env vars
 process.loadEnvFile('./.env');
 
-const { sequelize: db } = require('./config/database');
+const { mongoose: db } = require('./config/database');
 const { initModels } = require('./models');
 const router = require('./routes');
 
@@ -55,14 +55,17 @@ async function initApp(options = {}) {
 
   const theApp = createApp();
 
+  // a modifier avec la métode de connection à la base de données
   await db.authenticate();
+  const dbInstance = await connnectDB();// Ajout
 
   // Initialize all models & expose to controllers
+  // a modier pour fournur les 2 models
   const models = initModels(db);
   theApp.locals.models = models;
 
   // Sync schema (or run migrations if you prefer)
-  await db.sync();
+  // await db.sync();
 
   if (listen) {
     server = theApp.listen(port, () => {
@@ -90,3 +93,10 @@ if (require.main === module) {
     process.exit(1);
   });
 }
+
+module.exports = {
+  connectDB, // 4a. connectDB doit être exportée
+  disconnectDB,
+  clearDatabase,
+  mongoose
+};
