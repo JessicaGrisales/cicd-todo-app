@@ -22,7 +22,7 @@ function createApp() {
   app = express();
 
   // Serve frontend static files (useful in dev/prod, skipped in tests if you want)
-  app.use(express.static(path.join(__dirname, '../dist')));
+  app.use(express.static(path.join(__dirname, '../dist')));//PM2 Explicaion prof pour le déploiement
 
   app.use(express.json());
   app.use(cookieParser());
@@ -41,7 +41,7 @@ function createApp() {
 
   // Fallback to SPA index
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+    res.sendFile(path.join(__dirname, '../dist/index.html')); 
   });
 
   return app;
