@@ -14,6 +14,8 @@ describe('Enregistrement, connexion et déconnexion', () => {
 
     cy.get('button[type="submit"]').contains('Créer un compte').click();
 
+    cy.url().should('include', '/login');
+    
     cy.visit('/');
     cy.url().should('include', '/login');
   });
