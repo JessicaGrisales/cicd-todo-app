@@ -47,7 +47,7 @@ describe('User Controller', () => {
     const res = await request(app).post('/api/user').send(payload);
 
     expect(res.status).toBe(201);
-    expect(res.body.email).toBe(payload.email);
+    expect(res.body.user.email).toBe(payload.email);
 
     const dbUser = await User.findOne({ where: { email: payload.email } });
     expect(dbUser).toBeTruthy();
@@ -69,7 +69,7 @@ describe('User Controller', () => {
     const res = await request(app).get('/api/user').set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.email).toBe(email);
+    expect(res.body.user.email).toBe(email);
   });
 
   // ------------------------------------------------------
@@ -97,10 +97,10 @@ describe('User Controller', () => {
       .send(update);
 
     expect(res.status).toBe(200);
-    expect(res.body.name).toBe(update.name);
-    expect(res.body.address).toBe(update.address);
-    expect(res.body.zip).toBe(update.zip);
-    expect(res.body.location).toBe(update.location);
+    expect(res.body.user.name).toBe(update.name);
+    expect(res.body.user.address).toBe(update.address);
+    expect(res.body.user.zip).toBe(update.zip);
+    expect(res.body.user.location).toBe(update.location);
 
     const dbUser = await User.findByPk(user.id);
     expect(dbUser.name).toBe(update.name);
