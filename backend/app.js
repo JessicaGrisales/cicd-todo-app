@@ -30,11 +30,11 @@ function createApp() {
   // API routes
   app.use(router);
 
-  // TEST-ONLY helper: reset DB between specs
-  /*if (process.env.NODE_ENV === 'test') {
-    const testApi = require('./routes/test.api');
-    app.use('/test', testApi);
-  }*/
+   // Health check
+  app.get('/health', (req, res) => {
+    res.sendStatus(200);
+  });
+
   if (process.env.NODE_ENV !== 'test') {
     process.loadEnvFile('./.env');
   }
