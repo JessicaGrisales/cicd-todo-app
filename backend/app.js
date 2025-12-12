@@ -4,7 +4,9 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 
 // Load env vars
-process.loadEnvFile('./.env');
+//process.loadEnvFile('./.env');// Fait erreor lors test action remplacer par la suivante
+
+require('dotenv').config();// Ajout pour éviter l'erreur d'action
 
 const { sequelize: db } = require('./config/database');
 const { initModels } = require('./models');
