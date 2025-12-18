@@ -17,7 +17,9 @@ const userSchema = new mongoose.Schema({
   zip: Number,
   location: String
 }, {
-  timestamps: true // Ajoute createdAt et updatedAt automatiquement
+  timestamps: true 
 });
 
-module.exports = mongoose.model('User', userSchema);
+const User = model('User', userSchema);
+
+export default User; 

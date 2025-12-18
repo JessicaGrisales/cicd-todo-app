@@ -22,7 +22,8 @@ const todoSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexation pour la fonction de recherche (exigence du cahier des charges)
-todoSchema.index({ text: 'text' });
+//todoSchema.index({ text: 'text' });
 
-module.exports = mongoose.model('Todo', todoSchema);
+const Todo = model('Todo', todoSchema);
+
+export default Todo;
