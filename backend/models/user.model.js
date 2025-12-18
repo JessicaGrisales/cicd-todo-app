@@ -1,65 +1,23 @@
-import mongoose from 'mongoose'; // Nouveau
-const { Schema, model } = mongoose;
+const mongoose = require('mongoose');
 
-const User =new Schema({
+const userSchema = new mongoose.Schema({
   email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    name: {
-      type: DataTypes.STRING
-    },
-    address: {
-      type: DataTypes.STRING
-    },
-    zip: {
-      type: DataTypes.INTEGER
-    },
-    location: {
-      type: DataTypes.STRING
-    }
-  });
-  return User;
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Veuillez entrer un email valide']
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  name: String,
+  address: String,
+  zip: Number,
+  location: String
+}, {
+  timestamps: true // Ajoute createdAt et updatedAt automatiquement
+});
 
-const UserSchema = model('user', User)
-export default UserSchema;
-
-
-/*module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('user', {
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    name: {
-      type: DataTypes.STRING
-    },
-    address: {
-      type: DataTypes.STRING
-    },
-    zip: {
-      type: DataTypes.INTEGER
-    },
-    location: {
-      type: DataTypes.STRING
-    }
-  });
-  return User;
-};*/
-
+module.exports = mongoose.model('User', userSchema);
