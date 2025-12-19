@@ -130,3 +130,49 @@ jobs:
       - name: Run ESLint (frontend)
         run: npm run lint
         working-directory: frontend
+  
+   # =========================
+  # FRONTEND – TESTS E2E (CYPRESS)
+  # =========================
+  frontend-e2e:
+    name: Frontend - Tests E2E (Cypress)
+    runs-on: ubuntu-latest
+    needs: frontend-lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: frontend
+
+      # Build frontend (mode test)
+      - name: Build frontend
+        run: npx vite build --mode test
+        working-directory: frontend
+
+      # Start preview server in background
+      - name: Start frontend preview
+        run: npx vite preview --mode test --port 4173 &
+        working-directory: frontend
+
+      # Wait for frontend to be ready
+      - name: Wait for frontend
+        run: npx wait-on http://localhost:4173
+
+      # Run Cypress E2E - Chrome
+      - name: Cypress E2E (Chrome)
+        run: npx cypress run --browser chrome --e2e
+        working-directory: frontend
+
+      # Run Cypress E2E - Firefox
+      - name: Cypress E2E (Firefox)
+        run: npx cypress run --browser firefox --e2e
+        working-directory: frontend
