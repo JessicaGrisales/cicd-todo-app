@@ -80,7 +80,7 @@ const imgUrlProfile = new URL('../assets/funny-smile.png', import.meta.url).href
               <MenuButton
                 class="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 data-testid="menu-button"
-                >
+              >
                 <span class="absolute -inset-1.5"></span>
                 <span class="sr-only">Ouvrir le menu</span>
                 <img class="h-8 w-8 rounded-full" :src="imgUrlProfile" alt="Profile" />

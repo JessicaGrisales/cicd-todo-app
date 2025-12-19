@@ -61,7 +61,10 @@ const location = computed(() => currentUser?.location);
       >
         Mon Profile
       </h1>
-      <p class="text-left mt-2 text-md text-gray-600 dark:text-gray-400" data-testid="profile-email">
+      <p
+        class="text-left mt-2 text-md text-gray-600 dark:text-gray-400"
+        data-testid="profile-email"
+      >
         {{ currentUser?.email }}
       </p>
       <Form

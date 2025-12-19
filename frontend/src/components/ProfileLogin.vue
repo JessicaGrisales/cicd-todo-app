@@ -31,7 +31,7 @@ const onSubmit = async (formValues: Record<string, any>) => {
   } catch (e) {
     errorMsg.value = e as string;
     loading.value = false;
-  } 
+  }
 };
 </script>
 

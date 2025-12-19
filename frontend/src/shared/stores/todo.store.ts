@@ -79,7 +79,7 @@ export const useTodo = defineStore('todo', {
     async fetchSearchTodo(query: string) {
       this.loading = true;
       this.allTodo = await fetchSearchTodo(query);
-      if(!this.allTodo) {
+      if (!this.allTodo) {
         this.allTodo = [];
       }
       this.loading = false;

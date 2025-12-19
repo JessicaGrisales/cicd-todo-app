@@ -63,7 +63,12 @@ const onSubmit = async (formValues: Record<string, any>) => {
           <FormInput name="email" type="email" label="Votre email" />
         </div>
         <div>
-          <FormInput name="password" type="password" label="Mot de passe" autocomplete="current-password" />
+          <FormInput
+            name="password"
+            type="password"
+            label="Mot de passe"
+            autocomplete="current-password"
+          />
         </div>
         <div>
           <FormInput name="confirmation" type="password" label="Confirmer votre mot de passe" />
