@@ -9,8 +9,12 @@ const cookieParser = require('cookie-parser');
 //require('dotenv').config();// Ajout pour éviter l'erreur d'action
 
 // Load env vars
-if(process.env.NODE_ENV !== 'test') {
+/*if(process.env.NODE_ENV !== 'test') {
 process.loadEnvFile('./.env');
+}*/
+
+if (process.env.NODE_ENV === 'test') {
+  app.use('/test', require('./routes/test.routes'));
 }
 
 const { sequelize: db } = require('./config/database');
@@ -29,7 +33,7 @@ function createApp() {
   app = express();
 
   // Serve frontend static files (useful in dev/prod, skipped in tests if you want)
-  app.use(express.static(path.join(__dirname, '../dist')));//PM2 Explicaion prof pour le déploiement
+  app.use(express.static(path.join(__dirname, '../dist'))); //PM2 Explicaion prof pour le déploiement
 
   app.use(express.json());
   app.use(cookieParser());
@@ -37,7 +41,7 @@ function createApp() {
   // API routes
   app.use(router);
 
-   // Health check
+  // Health check
   app.get('/health', (req, res) => {
     res.sendStatus(200);
   });
@@ -49,7 +53,7 @@ function createApp() {
 
   // Fallback to SPA index
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html')); 
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
   });
 
   return app;
