@@ -3,8 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main.
-
+      - main
 jobs:
   check_backend:
     name: Backend – Audit, Lint & Tests
@@ -107,4 +106,3 @@ jobs:
           browser: ${{ matrix.browser }}
           wait-on-timeout: 60
           config: baseUrl=http://localhost:4173
-# gbrbgb
