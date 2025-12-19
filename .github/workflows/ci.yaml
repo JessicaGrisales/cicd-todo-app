@@ -153,15 +153,26 @@ jobs:
         run: npm install
         working-directory: frontend
 
-      - name: Wait for frontend
-        run: npx vite preview --mode test --port 4173
+      # Build frontend
+      - name: Build frontend (test mode)
+        run: npx vite build --mode test
+        working-directory: frontend
 
-      # Run Cypress E2E - Chrome
+      # Start frontend preview in background
+      - name: Start frontend preview
+        run: npx vite preview --mode test --port 4173 &
+        working-directory: frontend
+
+      # Wait until frontend is accessible
+      - name: Wait for frontend to be ready
+        run: npx wait-on http://localhost:4173
+
+      # Cypress E2E - Chrome
       - name: Cypress E2E (Chrome)
         run: npx cypress run --browser chrome --e2e
         working-directory: frontend
 
-      # Run Cypress E2E - Firefox
+      # Cypress E2E - Firefox
       - name: Cypress E2E (Firefox)
         run: npx cypress run --browser firefox --e2e
         working-directory: frontend
