@@ -9,12 +9,8 @@ const cookieParser = require('cookie-parser');
 //require('dotenv').config();// Ajout pour éviter l'erreur d'action
 
 // Load env vars
-/*if(process.env.NODE_ENV !== 'test') {
-process.loadEnvFile('./.env');
-}*/
-
-if (process.env.NODE_ENV === 'test') {
-  app.use('/test', require('./routes/test.routes'));
+if (process.env.NODE_ENV !== 'test') {
+  process.loadEnvFile('./.env');
 }
 
 const { sequelize: db } = require('./config/database');
