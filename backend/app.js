@@ -6,7 +6,12 @@ const cookieParser = require('cookie-parser');
 // Load env vars
 //process.loadEnvFile('./.env');// Fait erreor lors test action remplacer par la suivante
 
-require('dotenv').config();// Ajout pour éviter l'erreur d'action
+//require('dotenv').config();// Ajout pour éviter l'erreur d'action
+
+// Load env vars
+if(process.env.NODE_ENV !== 'test') {
+process.loadEnvFile('./.env');
+}
 
 const { sequelize: db } = require('./config/database');
 const { initModels } = require('./models');
@@ -38,7 +43,8 @@ function createApp() {
   });
 
   if (process.env.NODE_ENV !== 'test') {
-    process.loadEnvFile('./.env');
+    const testApi = require('./routes/test.api');
+    app.use('/test', testApi);
   }
 
   // Fallback to SPA index
