@@ -69,7 +69,7 @@ describe('User Controller', () => {
     const res = await request(app).get('/api/user').set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.user.body.email).toBe(email);
+    expect(res.body.user.email).toBe(email);
   });
 
   // ------------------------------------------------------
