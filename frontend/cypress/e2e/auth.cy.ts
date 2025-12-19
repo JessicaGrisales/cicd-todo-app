@@ -1,5 +1,4 @@
 describe('Enregistrement, connexion et déconnexion', () => {
-
   beforeEach(() => {
     cy.resetDb();
     cy.visit('/');
@@ -13,17 +12,16 @@ describe('Enregistrement, connexion et déconnexion', () => {
     cy.get('input[name="confirmation"]').type(Cypress.env('USER_PASSWORD'));
 
     cy.get('button[type="submit"]').contains('Créer un compte').click();
-
+    cy.url().should('include', '/login');
     cy.visit('/');
     cy.url().should('include', '/login');
   });
 
   it('Se connecter à un utilisateur existant', () => {
-
     // Intercepter les appels API liés aux tâches pour s'assurer avant de poursuivre.
     cy.intercept('GET', '/api/todo').as('getTodos');
-    
-    cy.createUser(Cypress.env('USER_EMAIL'),Cypress.env('USER_PASSWORD'));
+
+    cy.createUser(Cypress.env('USER_EMAIL'), Cypress.env('USER_PASSWORD'));
     cy.visit('/login');
 
     cy.get('input[name="email"]').type(Cypress.env('USER_EMAIL'));
@@ -68,5 +66,4 @@ describe('Enregistrement, connexion et déconnexion', () => {
     // Vérifie la redirection vers /login
     cy.location('pathname').should('eq', '/login');
   });
-
 });
