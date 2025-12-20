@@ -2,8 +2,14 @@ const bcrypt = require('bcrypt');
 
 const cleanUser = (user) => {
   // eslint-disable-next-line no-unused-vars
-  const { password, ...cleanedUser } = user.get({ plain: true });
-  return cleanedUser;
+
+  // Adaptation mongo
+  let userObjet = user.toObject();
+  delete userObjet.password;
+  return userObjet;
+
+  /*const { password, ...cleanedUser } = user.get({ plain: true });
+  return cleanedUser;*/
 };
 
 const UserController = {
@@ -21,8 +27,8 @@ const UserController = {
       .catch((error) => {
         console.error('ADD USER: ', error);
         let errorMsg = "Erreur lors de l'inscription !";
-        if (error && error.name === 'SequelizeUniqueConstraintError') {
-        //if (error && error.code === '11000') {
+        // SequelizeUniqueConstraintError est sequelize alors que 11000 fonctionne dans ce cas
+        if (error && error.name === 11000) {
           errorMsg = 'Un compte avec cet email exist déjà !';
         }
         return res.status(409).json({ message: errorMsg });
@@ -32,10 +38,11 @@ const UserController = {
     const user_id = req.sub;
     const { User } = req.app.locals.models;
 
+    // Changement, avant destroy et attribut exclude
     await User.findOne({
-      where: { id: user_id },
-      attributes: { exclude: ['id', 'password'] }
+      id: user_id
     })
+      .select('id', '-password')
       .then((result) => {
         if (result) {
           return res.status(200).json({ user: result });
@@ -54,7 +61,8 @@ const UserController = {
     const data = req.body;
     const { User } = req.app.locals.models;
 
-    const user = await User.findOne({ where: query });
+    // Adapter avant il y avait le where : query
+    const user = await User.findOne(query);
     if (user) {
       user.name = data.name ? data.name : null;
       user.address = data.address ? data.address : null;
@@ -78,9 +86,7 @@ const UserController = {
     const query = { id: user_id };
     const { User } = req.app.locals.models;
 
-    User.destroy({
-      where: query
-    })
+    User.deleteOne(query)
       .then(() => {
         return res.status(200).json({ id: user_id });
       })
