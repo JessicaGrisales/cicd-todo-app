@@ -1,4 +1,6 @@
-const { Sequelize } = require('sequelize');
+// Remplacement de la version sequilize par
+// celle-ci pour importer directement les modèles
+require('../models/todo.model');
 
 const TodoController = {
   createTodo: async (req, res) => {
@@ -24,11 +26,13 @@ const TodoController = {
     const user_id = req.sub;
     const { Todo } = req.app.locals.models;
 
-    await Todo.findAll({
-      where: { user_id: user_id },
-      order: [['date', 'ASC']],
-      attributes: { exclude: ['user_id'] }
+    // Adapter à mongoose avant findAll
+    // Tri par sort et ajout select équivalent à exclude
+    await Todo.find({
+      user_id: user_id
     })
+      .sort({ date: 1 })
+      .select('-user_id')
       .then((result) => {
         if (result) {
           return res.status(200).json(result);
@@ -47,7 +51,7 @@ const TodoController = {
     const data = req.body;
     const { Todo } = req.app.locals.models;
 
-    const result = await Todo.findOne({ where: query });
+    const result = await Todo.findOne(query);
     if (result) {
       result.completed = data.completed ? data.completed : false;
       result.text = data.text ? data.text : result.text;
@@ -71,9 +75,9 @@ const TodoController = {
     const query = { id: todo_id, user_id: user_id };
     const { Todo } = req.app.locals.models;
 
-    Todo.destroy({
-      where: query
-    })
+    // Adapter à mongoose avant destroy
+    // Suppression de where
+    Todo.deleteOne(query)
       .then(() => {
         return res.status(200).json({ id: todo_id });
       })
@@ -87,16 +91,15 @@ const TodoController = {
     const query = req.query.q;
     const { Todo } = req.app.locals.models;
 
-    await Todo.findAll({
-      where: [
-        {
-          user_id: user_id
-        },
-        Sequelize.literal(`MATCH (text) AGAINST ('*${query}*' IN BOOLEAN MODE)`)
-      ],
-      order: [['date', 'ASC']],
-      attributes: { exclude: ['user_id'] }
+    // Adapter à mongoose avant findAll
+    // Ajout de sort pour le tri en ASC
+    // Remplacement de l'attribut exclude par select plus approprié pour mongoose
+    await Todo.find({
+      user_id: user_id,
+      $text: { $search: query }
     })
+      .sort({ date: 1 })
+      .select('user_id')
       .then((result) => {
         if (result) {
           return res.status(200).json(result);
