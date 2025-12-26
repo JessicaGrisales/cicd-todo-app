@@ -2,26 +2,33 @@ const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
 
 const { JWT_SECRET } = require('../config/keys');
+require('../models');
 
 // remove password from user object
 const cleanUser = (user) => {
   // eslint-disable-next-line no-unused-vars
-  const { password, ...cleanedUser } = user.get({ plain: true });
-  return cleanedUser;
+  // Adaètation a mongo
+  const cleanUser = user.toObject();
+  delete cleanUser.password;
+  return cleanUser;
+
+  /*const { password, ...cleanedUser } = user.get({ plain: true });
+  return cleanedUser;*/
 };
 
 const AuthController = {
   loginUser: async (req, res) => {
     const { User } = req.app.locals.models;
-    await User.findOne({
-      where: { email: req.body.email.toLowerCase() }
-    })
+    const email = req.body.email;
+    // Adaptation a Mongo
+    await User.findOne({ email: email.toLowerCase() })
       .then((result) => {
         if (result) {
           if (bcrypt.compareSync(req.body.password, result.password)) {
             const user = cleanUser(result);
             const token = jsonwebtoken.sign({}, JWT_SECRET, {
-              subject: result.id.toString(),
+              // Adaptation de l'ID à mongo version sequelize avant result.id
+              subject: result._id.toString(),
               expiresIn: 60 * 60 * 24 * 30 * 6,
               algorithm: 'RS256'
             });
