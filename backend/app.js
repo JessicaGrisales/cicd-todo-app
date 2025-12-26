@@ -1,4 +1,3 @@
-
 // app.js
 const express = require('express');
 const path = require('path');
@@ -7,8 +6,8 @@ const cookieParser = require('cookie-parser');
 // Load env vars
 process.loadEnvFile('./.env');
 
-const { mongoose: db } = require('./config/database');
-const { initModels } = require('./models');
+const { mongoose: db, connectDB } = require('./config/database');
+//const { initModels } = require('./models');
 const router = require('./routes');
 
 const PORT = process.env.PORT || '3000';
@@ -56,12 +55,11 @@ async function initApp(options = {}) {
   const theApp = createApp();
 
   // a modifier avec la métode de connection à la base de données
-  await db.authenticate();
-  const dbInstance = await connnectDB();// Ajout
+  await connectDB();
 
   // Initialize all models & expose to controllers
-  // a modier pour fournur les 2 models
-  const models = initModels(db);
+  // a modier pour fournir les 2 models
+  const models = require('./models');
   theApp.locals.models = models;
 
   // Sync schema (or run migrations if you prefer)
@@ -93,10 +91,10 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-
+// Adapter à mongo
 module.exports = {
-  connectDB, // 4a. connectDB doit être exportée
-  disconnectDB,
-  clearDatabase,
-  mongoose
+  // Ajout
+  createApp,
+  initApp,
+  stopApp
 };
