@@ -13,3 +13,33 @@ Ce projet consiste en la migration technique d'une application de gestion de tâ
 - Infrastructure : Docker et Docker Compose pour l'orchestration des containers.
 
 - Sécurité : JSON Web Token (JWT) pour les sessions et Bcrypt pour le hashage des mots de passe.
+
+### Fonctionnement de l'application
+
+Le fonctionnement du projet s'articule autour d'une architecture client-serveur stricte, divisée en deux volets : l'architecture technique et le scénario d'utilisation.
+
+1.  Architecture Technique (Flux de données)
+    L'interaction entre les différentes couches du système suit ce schéma :
+
+    - Client (Frontend) : Envoie des requêtes HTTP standard (GET, POST, PUT, DELETE) pour interagir avec l'API. Chaque requête sécurisée inclut le jeton d'authentification dans son en-tête.
+
+    - Serveur (Express.js) : Il reçoit la requête, vérifie systématiquement l'identité de l'émetteur via le Token JWT, et dirige la demande vers le contrôleur approprié.
+
+    - Base de données (MongoDB) : Les données sont stockées de manière persistante dans deux collections principales : users et todos. La relation est relationnelle au niveau logique : chaque tâche est liée dynamiquement à un utilisateur via son \_id.
+
+2.  Scénario d'Utilisation (Cycle de vie)
+    Du point de vue de l'utilisateur, l'application permet la gestion complète de deux entités :
+
+    - Gestion du Compte (User) :
+
+      - Inscription : Création d'un nouveau document dans la collection users avec hashage du mot de passe.
+
+      - Connexion : Authentification et réception du Token JWT pour la session.
+
+      - Administration : L'utilisateur connecté peut modifier ses informations ou supprimer son compte (ce qui entraîne le nettoyage de ses données).
+
+    - Gestion des Tâches (Todos) :
+
+      - CRUD : Une fois identifié, l'utilisateur peut Créer, Lire, Mettre à jour et Supprimer des tâches.
+
+      - Isolation : Le système garantit que chaque utilisateur n'accède qu'à ses propres tâches. Même si deux utilisateurs sont connectés en même temps, le filtrage par user_id assure une étanchéité totale des données.
