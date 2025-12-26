@@ -18,7 +18,7 @@ Ce projet consiste en la migration technique d'une application de gestion de tâ
 
 Le fonctionnement du projet s'articule autour d'une architecture client-serveur stricte, divisée en deux volets : l'architecture technique et le scénario d'utilisation.
 
-1.  Architecture Technique (Flux de données)
+1.  **Architecture Technique (Flux de données)**
     L'interaction entre les différentes couches du système suit ce schéma :
 
     - Client (Frontend) : Envoie des requêtes HTTP standard (GET, POST, PUT, DELETE) pour interagir avec l'API. Chaque requête sécurisée inclut le jeton d'authentification dans son en-tête.
@@ -27,7 +27,7 @@ Le fonctionnement du projet s'articule autour d'une architecture client-serveur 
 
     - Base de données (MongoDB) : Les données sont stockées de manière persistante dans deux collections principales : users et todos. La relation est relationnelle au niveau logique : chaque tâche est liée dynamiquement à un utilisateur via son \_id.
 
-2.  Scénario d'Utilisation (Cycle de vie)
+2.  **Scénario d'Utilisation (Cycle de vie)**
     Du point de vue de l'utilisateur, l'application permet la gestion complète de deux entités :
 
     - Gestion du Compte (User) :
@@ -43,3 +43,50 @@ Le fonctionnement du projet s'articule autour d'une architecture client-serveur 
       - CRUD : Une fois identifié, l'utilisateur peut Créer, Lire, Mettre à jour et Supprimer des tâches.
 
       - Isolation : Le système garantit que chaque utilisateur n'accède qu'à ses propres tâches. Même si deux utilisateurs sont connectés en même temps, le filtrage par user_id assure une étanchéité totale des données.
+
+## 3. Instructions pour un environnement local
+
+**Prérequis**
+
+Docker Desktop installé et démarré.
+
+Git pour la récupération des sources.
+
+**Installation et Lancement**
+
+1. Cloner le dépôt :
+
+```bash
+git clone https://github.com/JessicaGrisales/cicd-todo-app.git
+cd cicd-todo-app
+```
+
+2. Configuration (.env) : Assurez-vous que le fichier .env à la racine contient la chaîne de connexion adaptée au réseau Docker :
+
+```bash
+MONGODB_URL="mongodb://root:admin@localhost:27017/db_todoapp?authSource=admin"
+```
+
+3. Démarrer l'application : Exécutez la commande suivante pour construire et lancer les conteneurs :
+
+```bash
+docker-compose up --build
+```
+
+4. Accès :
+
+- Application Web: http://localhost:5173/
+
+```bash
+Depuis le répertoire frontend
+
+npm run dev
+```
+
+- API Backend: http://localhost:3000/
+
+```bash
+Depuis le répertoire backend
+
+git npm run start
+```
