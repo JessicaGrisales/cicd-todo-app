@@ -90,3 +90,50 @@ Depuis le répertoire backend
 
 git npm run start
 ```
+
+## 4. Indications concernant les permissions (Point 2.1)
+
+La sécurité et la gestion des droits d'accès ont été implémentées à trois niveaux :
+
+1.  **Sécurité Base de Données (Infrastructure) :**
+
+    - Le conteneur MongoDB est protégé par un utilisateur root avec mot de passe.
+
+    - L'application Node.js s'authentifie obligatoirement via la base admin (authSource=admin) pour établir la connexion.
+
+2.  **Sécurité Applicative (Authentification) :**
+
+    - L'accès aux routes protégées nécessite un Token JWT valide.
+
+    - Le contrôleur d'authentification vérifie systématiquement la correspondance des mots de passe hachés via bcrypt.
+
+3.  **Sécurité des Données (Isolation) :**
+
+    - Le cloisonnement des données est strict : chaque requête de lecture, modification ou suppression de tâche (todo) inclut l'ID de l'utilisateur connecté (user_id).
+
+    - Cela garantit qu'un utilisateur ne peut jamais accéder aux tâches d'un autre, même en connaissant l'ID d'une tâche.
+
+## 5. Indications pour le Backup de la base de données (Point 2.2)
+
+Une stratégie de sauvegarde et de restauration a été mise en place en utilisant les volumes Docker pour garantir la persistance des archives sur la machine hôte.
+
+- Volume de Backup : Un "Bind Mount" a été configuré dans docker-compose.yml (./data/mongo:/backupdb), permettant de récupérer les fichiers de sauvegarde directement dans le dossier data/mongo de votre projet Windows/Linux.
+
+**Commande de Sauvegarde (Backup)**
+
+Cette commande crée une archive compressée (.gz) de la base db_todoapp :
+
+```bash
+docker exec mongo mongodump --db db_todoapp --username root --password admin --authenticationDatabase admin --gzip --archive=/backupdb/backup_todoapp.gz
+```
+
+Le fichier généré sera disponible dans le dossier local cicd-todo-app/data/mongo/.
+
+**Commande de Restauration (Restore)**
+Cette commande écrase les données actuelles par celles de la sauvegarde (option --drop) :
+
+```bash
+docker exec mongo mongorestore --username root --password admin --authenticationDatabase admin --gzip --archive=/backupdb/backup_todoapp.gz --drop
+```
+
+## 6. Usage de l'IA dans ce projet
