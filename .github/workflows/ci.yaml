@@ -72,3 +72,56 @@ jobs:
         # Lance les tests backend
         # si un test échoue, le job échoue
         run: npm run test:ci
+
+  frontend:
+  # Nom lisible du job affiché dans l’interface GitHub Actions
+  name: Frontend - Audit, Lint & Tests
+
+  # Type de machine virtuelle utilisée pour exécuter le job
+  runs-on: ubuntu-latest
+
+  # Configuration par défaut pour toutes les commandes `run`
+  defaults:
+    run:
+      # Tous les `run:` seront exécutés dans le dossier frontend/
+      # → évite de répéter le chemin à chaque étape
+      working-directory: frontend
+
+  # Liste des étapes exécutées dans l’ordre
+  steps:
+    # Étape 1 : récupérer (cloner) le dépôt GitHub
+    - name: Checkout repository
+      # Action officielle GitHub pour cloner le repo
+      uses: actions/checkout@v5
+
+    # Étape 2 : installer Node.js et configurer npm
+    - name: Setup node
+      # Action officielle pour installer Node.js
+      uses: actions/setup-node@v4
+      with:
+        # Version de Node.js utilisée par le frontend
+        node-version: 22
+
+        # Active le cache automatique des dépendances npm
+        # accélère les exécutions suivantes du CI
+        cache: npm
+
+        # Chemin vers le package-lock.json utilisé pour le cache
+        # nécessaire car le projet est dans frontend/
+        cache-dependency-path: frontend/package-lock.json
+
+    # Étape 3 : installation propre des dépendances
+    - name: Install dependencies
+      # npm ci est optimisé pour les environnements CI
+      # installation rapide et reproductible
+      run: npm ci
+
+    # Étape 4 : audit de sécurité des dépendances
+    - name: Audit Security
+      # Lance le script d’audit défini dans le package.json
+      run: npm run audit:ci
+
+    # Étape 5 : vérification de la qualité et du style du code
+    - name: Lint
+      # Lance le linter
+      run: npm run lint
