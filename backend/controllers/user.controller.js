@@ -40,9 +40,9 @@ const UserController = {
 
     // Changement, avant destroy et attribut exclude
     await User.findOne({
-      id: user_id
+      _id: user_id
     })
-      .select('id', '-password')
+      .select('-password')
       .then((result) => {
         if (result) {
           return res.status(200).json({ user: result });
@@ -57,7 +57,7 @@ const UserController = {
   },
   editUser: async (req, res) => {
     const user_id = req.sub;
-    const query = { id: user_id };
+    const query = { _id: user_id };
     const data = req.body;
     const { User } = req.app.locals.models;
 
@@ -83,12 +83,12 @@ const UserController = {
   },
   deleteCurrentUser: (req, res) => {
     const user_id = req.sub;
-    const query = { id: user_id };
+    const query = { _id: user_id };
     const { User } = req.app.locals.models;
 
     User.deleteOne(query)
       .then(() => {
-        return res.status(200).json({ id: user_id });
+        return res.status(200).json({ _id: user_id });
       })
       .catch((error) => {
         console.error('DELETE USER: ', error);

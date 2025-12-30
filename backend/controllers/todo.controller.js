@@ -1,6 +1,7 @@
 // Remplacement de la version sequilize par
 // celle-ci pour importer directement les modèles
 require('../models/todo.model');
+const mongoose = require('mongoose');
 
 const TodoController = {
   createTodo: async (req, res) => {
@@ -22,6 +23,7 @@ const TodoController = {
         return res.status(500);
       });
   },
+
   getAllTodo: async (req, res) => {
     const user_id = req.sub;
     const { Todo } = req.app.locals.models;
@@ -45,9 +47,10 @@ const TodoController = {
         return res.status(500);
       });
   },
+
   editTodo: async (req, res) => {
     const user_id = req.sub;
-    const query = { id: req.params.id, user_id: user_id };
+    const query = { _id: req.params.id, user_id: user_id };
     const data = req.body;
     const { Todo } = req.app.locals.models;
 
@@ -69,10 +72,11 @@ const TodoController = {
       return res.status(404);
     }
   },
-  deleteTodo: (req, res) => {
+
+  /*deleteTodo: async (req, res) => {
     const user_id = req.sub;
     const todo_id = req.params.id;
-    const query = { id: todo_id, user_id: user_id };
+    const query = { _id: todo_id, user_id: user_id };
     const { Todo } = req.app.locals.models;
 
     // Adapter à mongoose avant destroy
@@ -85,7 +89,40 @@ const TodoController = {
         console.error('DELETE TODO: ', error);
         return res.status(500);
       });
+  },*/
+
+  deleteTodo: async (req, res) => {
+    const todo_id = req.params.id;
+    const user_id = req.sub;
+    const { Todo } = req.app.locals.models;
+
+    // 1️⃣ Validation de l’ID du todo
+    if (!mongoose.Types.ObjectId.isValid(todo_id)) {
+      return res.status(400).json({
+        error: 'Invalid Todo ID',
+        received: todo_id
+      });
+    }
+
+    // 2️⃣ Conversion du user_id (JWT) en ObjectId MongoDB
+    const userObjectId = new mongoose.Types.ObjectId(user_id);
+
+    // 3️⃣ Requête correcte
+    const result = await Todo.deleteOne({
+      _id: todo_id,
+      user_id: userObjectId
+    });
+
+    // 4️⃣ Vérification réelle de la suppression
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        error: 'Todo not found or not owned by user'
+      });
+    }
+
+    return res.sendStatus(204);
   },
+
   getSearchTodo: async (req, res) => {
     const user_id = req.sub;
     const query = req.query.q;
@@ -99,7 +136,7 @@ const TodoController = {
       $text: { $search: query }
     })
       .sort({ date: 1 })
-      .select('user_id')
+      .select('-user_id')
       .then((result) => {
         if (result) {
           return res.status(200).json(result);

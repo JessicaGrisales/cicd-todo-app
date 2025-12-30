@@ -4,7 +4,7 @@ import { createTodo, deleteTodo, fetchAllTodo, fetchSearchTodo, updateTodo } fro
 import type { ResponseData } from '../helpers';
 
 interface ResponseTodoData {
-  id: number;
+  id: number; // Ajout Jess
   date: string;
   text: string;
   completed: boolean;
@@ -79,7 +79,7 @@ export const useTodo = defineStore('todo', {
     async fetchSearchTodo(query: string) {
       this.loading = true;
       this.allTodo = await fetchSearchTodo(query);
-      if(!this.allTodo) {
+      if (!this.allTodo) {
         this.allTodo = [];
       }
       this.loading = false;
