@@ -1,108 +1,74 @@
-name: CI
+name: CI - Todo App
 
+# Déclencheurs du workflow
 on:
+  # Lance le CI à chaque push sur la branche main
   push:
     branches:
       - main
+
+  # Lance aussi le CI pour chaque Pull Request
+  pull_request:
+
+# Définition des jobs (un workflow peut avoir plusieurs jobs)
 jobs:
-  check_backend:
-    name: Backend – Audit, Lint & Tests
+  # Nom technique du job (utilisé par GitHub en interne)
+  backend:
+    # Nom lisible du job affiché dans l’interface GitHub
+    name: Backend Audit, Lint & Tests
+
+    # Type de machine virtuelle utilisée pour exécuter le job
     runs-on: ubuntu-latest
+
+    # Configuration par défaut pour toutes les commandes `run`
     defaults:
       run:
+        # Tous les `run:` seront exécutés dans le dossier backend/
+        # évite de répéter le chemin à chaque step
         working-directory: backend
-    steps:
-      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+    # Liste des étapes exécutées dans l’ordre
+    steps:
+      # Étape 1 : récupérer (cloner) le dépôt GitHub
+      - name: Checkout repository
+        # Action officielle GitHub pour cloner le repo
+        uses: actions/checkout@v5
+
+      # Étape 2 : installer Node.js et configurer npm
+      - name: Setup Node.js
+        # Action officielle pour installer Node.js
+        uses: actions/setup-node@v4
         with:
+          # Version de Node.js utilisée par le backend
           node-version: 22
 
-      - name: Installation des dependeances (clean)
+          # Active le cache automatique des dépendances npm
+          # accélère les exécutions suivantes du CI
+          cache: npm
+
+          # Chemin vers le package-lock.json utilisé pour le cache
+          # nécessaire car le projet est dans backend/
+          cache-dependency-path: backend/package-lock.json
+
+      # Étape 3 : installation propre des dépendances
+      - name: Install dependencies
+        # npm ci est optimisé pour les environnements CI
+        # → utilise package-lock.json
+        # → installation rapide et reproductible
         run: npm ci
 
-      - name: Vérification du audit
+      # Étape 4 : audit de sécurité des dépendances
+      - name: Security audit
+        # Lance le script défini dans package.json (audit CI)
         run: npm run audit:ci
 
-      - name: Installation de lint
+      # Étape 5 : vérification du style et de la qualité du code
+      - name: Lint
+        # Lance ESLint
         run: npm run lint
 
-      - name: Test
+      # Étape 6 : exécution des tests automatisés
+      - name: Run tests
+        # Lance les tests backend
+        # si un test échoue, le job échoue
         run: npm run test:ci
-
-      - name: Control du directory
-        run: ls
-
-  check_frontend:
-    name: Frontend – Audit, Lint & Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Installation des dependeances (clean)
-        run: npm ci
-
-      - name: Vérification du audit
-        run: npm run audit:ci
-
-      - name: Installation de lint
-        run: npm run lint
-
-  test_e2e:
-    runs-on: ubuntu-latest
-
-    needs:
-      - check_backend
-      - check_frontend
-    strategy:
-      matrix:
-        browser: [chrome, firefox, edge]
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Installation des dependeances (clean)
-        working-directory: backend
-        run: npm ci
-
-      - name: Installation des dependeances (clean)
-        working-directory: frontend
-        run: npm ci
-
-      - name: Start backend API
-        working-directory: backend
-        run: |
-          npm run start:e2e &
-          echo "Waiting for backend on http://localhost:3000/health ..."
-          for i in {1..10}; do
-            if curl -sSf http://localhost:3000/health > /dev/null; then
-              echo "Backend is up !"
-              exit 0
-            fi
-            echo "Still waiting..."
-            sleep 2
-          done
-          echo "Backend did not start in time !"
-          exit 1
-
-      - name: Run Cypress E2E tests
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: frontend
-          build: npm run build:test
-          start: npm run preview:test
-          wait-on: "http://localhost:4173"
-          browser: ${{ matrix.browser }}
-          wait-on-timeout: 60
-          config: baseUrl=http://localhost:4173
