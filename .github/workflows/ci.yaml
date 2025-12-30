@@ -130,7 +130,7 @@ jobs:
     name: E2E Tests (Cypress)
     runs-on: ubuntu-latest
 
-    # À activer si ton CI a déjà backend + frontend
+    # À activer si le CI a déjà backend + frontend
     needs: [backend, frontend]
 
     strategy:
@@ -184,3 +184,8 @@ jobs:
           wait-on-timeout: 60
           browser: ${{ matrix.browser }}
           config: baseUrl=http://localhost:4173
+
+      - name: Debug frontend env
+        working-directory: frontend
+        run: |
+          echo "VITE_API_URL=$VITE_API_URL"
