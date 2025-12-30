@@ -67,7 +67,7 @@ jobs:
         # Lance ESLint
         run: npm run lint
 
-      # Étape 6 : exécution des tests automatisés
+      # Étape 6 : exécution des tests d'intégration
       - name: Run tests
         # Lance les tests backend
         # si un test échoue, le job échoue
@@ -125,3 +125,36 @@ jobs:
       - name: Lint
         # Lance le linter
         run: npm run lint
+
+    e2e:
+    name: E2E Tests (Cypress)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Backend
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Start backend (test)
+        working-directory: backend
+        run: npm run start:e2e &
+
+      # Frontend
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Cypress E2E (headless)
+        working-directory: frontend
+        run: npm run e2e:run:chrome
+
