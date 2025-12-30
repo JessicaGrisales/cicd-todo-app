@@ -127,65 +127,152 @@ jobs:
         run: npm run lint
 
   e2e:
+    # Nom lisible du job affiché dans l’interface GitHub Actions
     name: E2E Tests (Cypress)
+
+    # Machine virtuelle utilisée pour exécuter les tests E2E
     runs-on: ubuntu-latest
 
-    # À activer si le CI a déjà backend + frontend
+    # Le job E2E ne démarre que si les jobs backend ET frontend ont réussi
     needs: [backend, frontend]
 
+    # Exécution des tests E2E sur plusieurs navigateurs
     strategy:
       matrix:
+        # Liste des navigateurs testés par Cypress
         browser: [edge, chrome, firefox]
 
+    # Liste des étapes exécutées dans l’ordre
     steps:
+      # Étape 1 : récupérer (cloner) le dépôt GitHub
       - name: Checkout repository
+        # Action officielle GitHub pour cloner le repo
         uses: actions/checkout@v5
 
+      # Étape 2 : installer Node.js sur la machine du CI
       - name: Setup Node.js
+        # Action officielle pour installer Node.js
         uses: actions/setup-node@v4
         with:
+          # Version de Node.js utilisée pour les tests E2E
           node-version: 22
 
-      # Installation des dépendances backend
+      # Étape 3 : installation des dépendances backend
       - name: Install backend dependencies
+        # Les commandes s’exécutent dans le dossier backend/
         working-directory: backend
+        # Installation propre et reproductible des dépendances
         run: npm ci
 
-      # Installation des dépendances frontend
+      # Étape 4 : installation des dépendances frontend
       - name: Install frontend dependencies
+        # Les commandes s’exécutent dans le dossier frontend/
         working-directory: frontend
+        # Installation propre et reproductible des dépendances
         run: npm ci
 
-      # Démarrage backend + health check
+      # Étape 5 : démarrage du backend en mode test + vérification de disponibilité
       - name: Start backend API
+        # Les commandes s’exécutent dans le dossier backend/
         working-directory: backend
         run: |
+          # Démarre le backend en arrière-plan avec NODE_ENV=test
           npm run start:e2e &
+
+          # Message informatif dans les logs CI
           echo "Waiting for backend on http://localhost:3000/health ..."
+
+          # Boucle d’attente : vérifie que le backend répond correctement
           for i in {1..10}; do
+            # Appel HTTP silencieux vers l’endpoint /health
             if curl -sSf http://localhost:3000/health > /dev/null; then
               echo "Backend is up !"
               exit 0
             fi
+            # Si le backend n’est pas encore prêt, on attend
             echo "Still waiting..."
             sleep 2
           done
+
+          # Si le backend ne démarre pas dans le temps imparti, le job échoue
           echo "Backend did not start in time !"
           exit 1
 
-      # Tests E2E Cypress
+      # Étape 6 : exécution des tests End-to-End avec Cypress
       - name: Run Cypress E2E tests
+        # Action officielle Cypress pour exécuter les tests E2E
         uses: cypress-io/github-action@v6
         with:
+          # Dossier de travail pour les tests E2E
           working-directory: frontend
+
+          # Build du frontend en mode test
           build: npm run build:test
+
+          # Démarrage du serveur frontend de test
           start: npm run preview:test
+
+          # URL que Cypress doit attendre avant de lancer les tests
           wait-on: "http://localhost:4173"
+
+          # Temps maximum d’attente (en secondes)
           wait-on-timeout: 60
+
+          # Navigateur utilisé pour les tests (défini par la matrix)
           browser: ${{ matrix.browser }}
+
+          # URL de base utilisée par Cypress pour les tests
           config: baseUrl=http://localhost:4173
 
-      - name: Debug frontend env
+  build:
+    name: Build Frontend + Backend
+
+    runs-on: ubuntu-latest
+
+    # Ce job ne démarre que si tous les jobs précédents ont réussi
+    # (backend, frontend et tests E2E)
+    needs:
+      - backend
+      - frontend
+      - e2e
+
+    # Liste des étapes exécutées dans l’ordre
+    steps:
+      # Étape 1 : récupération du dépôt GitHub
+      - name: Checkout repository
+        # Action officielle GitHub pour cloner le projet
+        uses: actions/checkout@v5
+
+      # Étape 2 : installation de Node.js
+      - name: Setup Node.js
+        # Action officielle pour configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Version de Node.js utilisée pour le build
+          node-version: 22
+
+      # Étape 3 : installation des dépendances backend
+      - name: Install backend dependencies
+        # Les commandes sont exécutées dans le dossier backend/
+        working-directory: backend
+        # Installation propre et reproductible des dépendances
+        run: npm ci
+
+      # Étape 4 : préparation du backend pour l’exécution
+      - name: Backend ready
+        working-directory: backend
+        run: echo "Backend ready for deployment"
+
+      # Étape 5 : installation des dépendances frontend
+      - name: Install frontend dependencies
+        # Les commandes sont exécutées dans le dossier frontend/
         working-directory: frontend
-        run: |
-          echo "VITE_API_URL=$VITE_API_URL"
+        # Installation des dépendances
+        run: npm ci
+
+      # Étape 6 : build du frontend
+      - name: Build frontend
+        # Génération des fichiers statiques optimisés
+        # destinés à l’environnement de test ou de production
+        working-directory: frontend
+        run: npm run build
