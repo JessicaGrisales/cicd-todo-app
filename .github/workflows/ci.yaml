@@ -131,11 +131,11 @@ jobs:
     runs-on: ubuntu-latest
 
     # À activer si ton CI a déjà backend + frontend
-    # needs: [backend, frontend]
+    needs: [backend, frontend]
 
     strategy:
       matrix:
-        browser: [chrome]
+        browser: [edge, chrome, firefox]
 
     steps:
       - name: Checkout repository
