@@ -1,0 +1,51 @@
+name: Fortinet VPN Connect
+description: "Connect GitHub runner to Fortinet VPN"
+
+inputs:
+  host:
+    required: true
+    type: string
+  port:
+    required: false
+    default: "443"
+    type: string
+  username:
+    required: true
+    type: string
+  password:
+    required: true
+    type: string
+  ping_host:
+    required: false
+    default: "8.8.8.8"
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install openconnect
+      shell: bash
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y openconnect
+
+    - name: Connect Fortinet VPN
+      shell: bash
+      run: |
+        echo "${{ inputs.password }}" \
+        | sudo openconnect \
+            --protocol=fortinet \
+            --user="${{ inputs.username }}" \
+            ${{ inputs.host }}:${{ inputs.port }} \
+            --passwd-on-stdin \
+            --background \
+            --no-dtls \
+            --quiet
+        sleep 7
+        echo "VPN Started"
+
+    - name: Verify VPN Ping
+      shell: bash
+      run: |
+        echo "Testing VPN connectivity..."
+        ping -c4 ${{ inputs.ping_host }}
