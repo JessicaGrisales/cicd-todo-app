@@ -1,0 +1,95 @@
+# Nom du workflow tel qu’il apparaît dans GitHub Actions
+name: Production
+
+# =========================
+# Déclencheur du workflow
+# =========================
+on:
+  # workflow_dispatch permet un déclenchement MANUEL
+  # Le déploiement en production n’est donc jamais automatique
+  workflow_dispatch:
+
+jobs:
+  # =========================
+  # Job de déploiement PROD
+  # =========================
+  deploy-prod:
+    # Nom lisible du job dans l’interface GitHub Actions
+    name: Deploy PROD (VPN + Docker Compose)
+
+    # Le job s’exécute sur une VM Linux fournie par GitHub
+    runs-on: ubuntu-latest
+
+    steps:
+      # =========================
+      # 1. Récupération du code
+      # =========================
+      - name: Checkout repository
+        # Clone le dépôt GitHub sur le runner
+        # Nécessaire pour accéder aux fichiers (docker-compose, action VPN, etc.)
+        uses: actions/checkout@v5
+
+      # =========================
+      # 2. Connexion au VPN
+      # =========================
+      - name: VPN setup
+        # Utilise l’action VPN fournie par l’enseignant
+        # Elle installe openconnect et établit le tunnel VPN Fortinet
+        uses: ./.github/actions/vpn
+        with:
+          # Adresse du serveur VPN
+          host: ${{ secrets.VPN_HOST }}
+
+          # Port du VPN (généralement 443)
+          port: ${{ secrets.VPN_PORT }}
+
+          # Identifiant VPN
+          username: ${{ secrets.VPN_USERNAME }}
+
+          # Mot de passe VPN (stocké dans les secrets GitHub)
+          password: ${{ secrets.VPN_PASS }}
+
+          # IP interne à pinguer pour vérifier que le VPN est bien actif
+          # Ici : la VM de PRODUCTION
+          ping_host: ${{ secrets.PROD_HOST_IP }}
+
+      # =========================
+      # 3. Déploiement PRODUCTION
+      # =========================
+      - name: Deploy to PROD VM
+        # Action permettant d’exécuter des commandes à distance via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # Adresse IP de la VM de production (accessible uniquement via VPN)
+          host: ${{ secrets.PROD_HOST_IP }}
+
+          # Utilisateur SSH
+          username: ${{ secrets.PROD_SSH_USER }}
+
+          # Mot de passe SSH (stocké dans les secrets)
+          password: ${{ secrets.PROD_SSH_PASS }}
+
+          # Port SSH standard
+          port: 22
+
+          # Commandes exécutées directement sur la VM de production
+          script: |
+            # Message informatif dans les logs
+            echo "Deploying PRODUCTION environment"
+
+            # Accès au dossier du projet sur la VM
+            cd ~/todo-app || exit 1
+
+            # Récupération de la dernière version du code validé
+            git pull origin main
+
+            # Arrêt et suppression des conteneurs existants
+            # Garantit un environnement propre
+            docker-compose -f docker-compose.prod.yml down
+
+            # Reconstruction des images Docker et redémarrage des services
+            # Le déploiement est entièrement automatisé après le déclenchement manuel
+            docker-compose -f docker-compose.prod.yml up -d --build
+
+            # Confirmation de fin de déploiement
+            echo "PRODUCTION deployment completed"
