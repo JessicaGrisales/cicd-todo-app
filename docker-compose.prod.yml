@@ -1,0 +1,52 @@
+version: "3.9"
+# Version du format docker-compose utilisée
+# Permet d’assurer la compatibilité avec Docker
+
+services:
+  # =========================
+  # SERVICE BACKEND
+  # =========================
+  backend:
+    # Construction de l’image Docker à partir du dossier backend/
+    # Utilise le Dockerfile présent dans ./backend
+    build: ./backend
+
+    # Nom explicite du conteneur backend en production
+    container_name: todo-backend-prod
+
+    # Expose le port 3000 du conteneur vers le port 3000 de la VM
+    # Permet l’accès à l’API depuis l’extérieur
+    ports:
+      - "3000:3000"
+
+    # Variables d’environnement injectées dans le conteneur
+    # Définit l’application en mode production
+    environment:
+      NODE_ENV: production
+
+    # Redémarre automatiquement le conteneur en cas de crash
+    restart: always
+
+  # =========================
+  # SERVICE FRONTEND
+  # =========================
+  frontend:
+    # Construction de l’image Docker à partir du dossier frontend/
+    # Utilise le Dockerfile présent dans ./frontend
+    build: ./frontend
+
+    # Nom explicite du conteneur frontend en production
+    container_name: todo-frontend-prod
+
+    # Expose le port 80 du conteneur (nginx) vers le port 80 de la VM
+    # Permet l’accès à l’application web depuis un navigateur
+    ports:
+      - "80:80"
+
+    # Indique que le frontend dépend du backend
+    # Docker démarre le backend avant le frontend
+    depends_on:
+      - backend
+
+    # Redémarre automatiquement le conteneur en cas de crash
+    restart: always
