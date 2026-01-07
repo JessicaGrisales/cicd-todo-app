@@ -277,6 +277,14 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      # Création de l'artifact (Upload) pour les tests
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifact Upload
+          path: frontend/dist
+
+
   deploy-test:
     # Nom du job affiché dans GitHub Actions
     name: Deploy TEST (VPN + Docker Compose)
@@ -294,6 +302,13 @@ jobs:
         # Clone le dépôt GitHub sur le runner
         # Nécessaire pour accéder aux fichiers (.github/actions/vpn, etc.)
         uses: actions/checkout@v5
+
+      # Télécharger l'artifact (download)
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dist
 
       # 2. Connexion au VPN
       - name: VPN setup
@@ -317,10 +332,11 @@ jobs:
           # Ici : la VM TEST
           ping_host: ${{ secrets.TEST_HOST_IP }}
 
+
       # 3. Déploiement sur la VM TEST
-      - name: Deploy via Docker Compose
+      - name: Copy files via SSH (SCP)
         # Action permettant d’exécuter des commandes SSH sur un serveur distant
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/scp-action@v1
         with:
           # Adresse IP de la VM TEST (accessible UNIQUEMENT via VPN)
           host: ${{ secrets.TEST_HOST_IP }}
@@ -331,11 +347,14 @@ jobs:
           # Mot de passe SSH (fourni par l’enseignant)
           password: ${{ secrets.TEST_SSH_PASS }}
 
-          # Port SSH standard
-          port: 22
+          # Port SSH 
+          port: ${{ secrets.SSH_PORT }}
+
+          source: "./frontend/dist,/backend"
+
 
           # Commandes exécutées sur la VM TEST
-          script: |
+          scripts: |
             echo "Deploying TEST environment"
 
             # Se placer dans le dossier du projet
