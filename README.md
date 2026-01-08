@@ -153,7 +153,7 @@ L'enseigant a spécifié certaines indications à réaliser
 
 **Package.json**
 Les dépendances liées à MySQL ont été supprimer du fichier en question (sqlite3, mysql2, sequelize).
-Le package-lock.json a été supprimer et réinstaller dans le backend grâche à la commande
+Le package-lock.json a été supprimer et réinstaller dans le backend grâche à la commande.
 
 ```bash
 npm install
