@@ -50,7 +50,7 @@ jobs:
           # Chemin vers le package-lock.json utilisé pour le cache
           # nécessaire car le projet est dans backend/
 
-          #cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
 
       # Étape 3 : installation propre des dépendancess
       - name: Install dependencies
@@ -106,11 +106,11 @@ jobs:
 
           # Active le cache automatique des dépendances npm
           # accélère les exécutions suivantes du CI
-          #cache: npm
+          cache: npm
 
           # Chemin vers le package-lock.json utilisé pour le cache
           # nécessaire car le projet est dans frontend/
-          #cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       # Étape 3 : installation propre des dépendances
       - name: Install dependencies
@@ -235,7 +235,7 @@ jobs:
     # (backend, frontend et tests E2E)
     needs:
       - backend
-      - frontend
+      #- frontend
       #- e2e
 
     # Liste des étapes exécutées dans l’ordre
