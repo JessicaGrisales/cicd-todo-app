@@ -91,7 +91,7 @@ Depuis le répertoire backend
 git npm run start
 ```
 
-## 4. Indications concernant les permissions (Point 2.1)
+## 4. Les permissions en général
 
 La sécurité et la gestion des droits d'accès ont été implémentées à trois niveaux :
 
@@ -113,7 +113,18 @@ La sécurité et la gestion des droits d'accès ont été implémentées à troi
 
     - Cela garantit qu'un utilisateur ne peut jamais accéder aux tâches d'un autre, même en connaissant l'ID d'une tâche.
 
-## 5. Indications pour le Backup de la base de données (Point 2.2)
+## 5. Indications concernant les permissions mises en place (Point 2.1)
+
+Pour sécuriser l'accès aux données, j'ai utilisé le fichier mongo-init.js. Ce script s'exécute au démarrage pour créer trois utilisateurs différents, afin de ne pas utiliser le compte "root" pour tout faire. Chacun a un rôle bien précis :
+
+- L'utilisateur pour l'application (app_backend):
+  C'est le compte que le serveur Node.js utilise pour se connecter. Je lui ai donné le droit de lire et d'écrire (readWrite) dans la base de données db_todoapp. C'est grâce à lui que l'application peut créer, afficher ou supprimer des tâches et des utilisateurs.
+
+- L'utilisateur pour gérer la base (admin_app) : Cet utilisateur sert uniquement à gérer la base de données des tâches. Il a le rôle userAdmin, ce qui lui permet de gérer les accès sur cette base spécifique, sans toucher au reste du système.
+
+- L'utilisateur pour les sauvegardes (backup_user) : C'est un compte spécial créé dans la base administrative. Je lui ai donné la permission de lire toutes les bases de données (readAnyDatabase). Son seul but est de pouvoir récupérer toutes les données pour faire des copies de sécurité (backups) en cas de problème.
+
+## 6. Indications pour le Backup de la base de données (Point 2.2)
 
 Une stratégie de sauvegarde et de restauration a été mise en place en utilisant les volumes Docker pour garantir la persistance des archives sur la machine hôte.
 
@@ -136,4 +147,28 @@ Cette commande écrase les données actuelles par celles de la sauvegarde (optio
 docker exec mongo mongorestore --username root --password admin --authenticationDatabase admin --gzip --archive=/backupdb/backup_todoapp.gz --drop
 ```
 
-## 6. Usage de l'IA dans ce projet
+## 7. Evaluation des 80%
+
+L'enseigant a spécifié certaines indications à réaliser
+
+**Package.json**
+Les dépendances liées à MySQL ont été supprimer du fichier en question (sqlite3, mysql2, sequelize).
+Le package-lock.json a été supprimer et réinstaller dans le backend grâche à la commande
+
+```bash
+npm install
+```
+
+**user.controller.js**
+L'ajout de findById() au lieu de findOne() dans les fonctions deleteCurrentUser, edtUser(), getUser().
+
+**test.api.js**
+Remplacement sequelize.sync() par clearDatabase() qui supprime toutes les collections MongoDB avant chaque test
+
+## 8. Usage de l'IA dans ce projet
+
+L'utilisation de l'intelligence artificielle a permis de mieux cerner les attentes du cahier des charges et de s'orienter efficacement dans ce nouvel environnement technique. Elle a aidé à appréhender la logique de fonctionnement de MongoDB et ses différences avec le SQL. L'outil a également servi de support pédagogique en fournissant des exemples concrets, ce qui a facilité la compréhension du contexte et la prise en main de la librairie Mongoose.
+
+## Conclusion
+
+Pour conclure, ce projet a représenté un véritable défi technique. La découverte de Mongoose et son intégration dans le backend constituaient une première pour moi. Si la prise en main a été difficile au début, notamment pour appréhender cette nouvelle logique, cet obstacle m'a permis de progresser significativement dans ma compréhension du développement backend.
