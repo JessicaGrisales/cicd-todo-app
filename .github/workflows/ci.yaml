@@ -45,7 +45,7 @@ jobs:
           # Active le cache automatique des dépendances npm
           # accélère les exécutions suivantes du CI
 
-          #cache: npm
+          cache: npm
 
           # Chemin vers le package-lock.json utilisé pour le cache
           # nécessaire car le projet est dans backend/
