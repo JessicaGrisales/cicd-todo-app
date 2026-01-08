@@ -234,7 +234,7 @@ jobs:
     needs:
       - backend
       - frontend
-      - e2e
+      #- e2e
 
     # Liste des étapes exécutées dans l’ordre
     steps:
@@ -278,97 +278,8 @@ jobs:
         run: npm run build
 
       # Création de l'artifact (Upload) pour les tests
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Artifact Upload
-          path: frontend/dist
-
-
-  deploy-test:
-    # Nom du job affiché dans GitHub Actions
-    name: Deploy TEST (VPN + Docker Compose)
-
-    # Le job s’exécute sur une VM Linux fournie par GitHub
-    runs-on: ubuntu-latest
-
-    # Ce job ne démarre QUE si le job "build" a réussi
-    # → garantit que seul un code validé est déployé
-    needs: build
-
-    steps:
-      # 1. Récupération du code
-      - name: Checkout repository
-        # Clone le dépôt GitHub sur le runner
-        # Nécessaire pour accéder aux fichiers (.github/actions/vpn, etc.)
-        uses: actions/checkout@v5
-
-      # Télécharger l'artifact (download)
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: dist
-
-      # 2. Connexion au VPN
-      - name: VPN setup
-        # Utilise l’action VPN fournie par l’enseignant
-        # Elle installe openconnect et établit le tunnel VPN
-        uses: ./.github/actions/vpn
-        with:
-          # Adresse du serveur VPN Fortinet
-          host: ${{ secrets.VPN_HOST }}
-
-          # Port du VPN (souvent 443)
-          port: ${{ secrets.VPN_PORT }}
-
-          # Identifiant VPN
-          username: ${{ secrets.VPN_USERNAME }}
-
-          # Mot de passe VPN (stocké en secret)
-          password: ${{ secrets.VPN_PASS }}
-
-          # IP interne à pinguer pour vérifier que le VPN fonctionne
-          # Ici : la VM TEST
-          ping_host: ${{ secrets.TEST_HOST_IP }}
-
-
-      # 3. Déploiement sur la VM TEST
-      - name: Copy files via SSH (SCP)
-        # Action permettant d’exécuter des commandes SSH sur un serveur distant
-        uses: appleboy/scp-action@v1
-        with:
-          # Adresse IP de la VM TEST (accessible UNIQUEMENT via VPN)
-          host: ${{ secrets.TEST_HOST_IP }}
-
-          # Utilisateur SSH
-          username: ${{ secrets.TEST_SSH_USER }}
-
-          # Mot de passe SSH (fourni par l’enseignant)
-          password: ${{ secrets.TEST_SSH_PASS }}
-
-          # Port SSH 
-          port: ${{ secrets.SSH_PORT }}
-
-          source: "./frontend/dist,/backend"
-
-
-          # Commandes exécutées sur la VM TEST
-          scripts: |
-            echo "Deploying TEST environment"
-
-            # Se placer dans le dossier du projet
-            cd ~/todo-app || exit 1
-
-            # Récupère la dernière version du code
-            git pull origin main
-
-            # Arrête et supprime les conteneurs existants
-            # → garantit un environnement propre
-            docker-compose -f docker-compose.test.yml down
-
-            # Reconstruit les images Docker et redémarre les services
-            # → backend + frontend recréés
-            docker-compose -f docker-compose.test.yml up -d --build
-
-            echo "TEST deployment completed"
+      #- name: Upload artifact
+      # uses: actions/upload-artifact@v4
+      # with:
+      #  name: Artifact Upload
+      # path: frontend/dist
