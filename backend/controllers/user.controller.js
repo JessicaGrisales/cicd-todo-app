@@ -39,7 +39,7 @@ const UserController = {
     const { User } = req.app.locals.models;
 
     // Changement, avant destroy et attribut exclude
-    await User.findOne({
+    await User.findById({
       _id: user_id
     })
       .select('-password')
@@ -62,7 +62,7 @@ const UserController = {
     const { User } = req.app.locals.models;
 
     // Adapter avant il y avait le where : query
-    const user = await User.findOne(query);
+    const user = await User.findById(query);
     if (user) {
       user.name = data.name ? data.name : null;
       user.address = data.address ? data.address : null;
@@ -86,7 +86,7 @@ const UserController = {
     const query = { _id: user_id };
     const { User } = req.app.locals.models;
 
-    User.deleteOne(query)
+    User.findById(query)
       .then(() => {
         return res.status(200).json({ _id: user_id });
       })
