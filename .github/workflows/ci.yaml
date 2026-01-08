@@ -52,7 +52,7 @@ jobs:
 
           #cache-dependency-path: backend/package-lock.json
 
-      # Étape 3 : installation propre des dépendances
+      # Étape 3 : installation propre des dépendancess
       - name: Install dependencies
         # npm ci est optimisé pour les environnements CI
         # → utilise package-lock.json
