@@ -13,83 +13,138 @@ jobs:
   # =========================
   # Job de déploiement PROD
   # =========================
-  deploy-prod:
-    # Nom lisible du job dans l’interface GitHub Actions
-    name: Deploy PROD (VPN + Docker Compose)
+  frontend:
+    # Nom lisible du job affiché dans l’interface GitHub Actions
+    name: Frontend - Audit, Lint & Tests
+
+    # Type de machine virtuelle utilisée pour exécuter le job
+    runs-on: ubuntu-latest
+
+    # Configuration par défaut pour toutes les commandes `run`
+    defaults:
+      run:
+        # Tous les `run:` seront exécutés dans le dossier frontend/
+        # → évite de répéter le chemin à chaque étape
+        working-directory: frontend
+
+    # Liste des étapes exécutées dans l’ordre
+    steps:
+      # Étape 1 : récupérer (cloner) le dépôt GitHub
+      - name: Checkout repository
+        # Action officielle GitHub pour cloner le repo
+        uses: actions/checkout@v5
+
+      # Étape 2 : installer Node.js et configurer npm
+      - name: Setup node
+        # Action officielle pour installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Version de Node.js utilisée par le frontend
+          node-version: 22
+
+          # Active le cache automatique des dépendances npm
+          # accélère les exécutions suivantes du CI
+          cache: npm
+
+          # Chemin vers le package-lock.json utilisé pour le cache
+          # nécessaire car le projet est dans frontend/
+          cache-dependency-path: frontend/package-lock.json
+
+      # Étape 3 : installation propre des dépendances
+      - name: Install dependencies
+        # npm ci est optimisé pour les environnements CI
+        # installation rapide et reproductible
+        run: npm ci
+
+      - name: Build
+        run: npm run build:only
+
+      # Création de l'artifact (Upload) pour les tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact
+          path: frontend/dist
+
+  deploy-production:
+    # Nom du job affiché dans GitHub Actions
+    name: Deploy production
 
     # Le job s’exécute sur une VM Linux fournie par GitHub
     runs-on: ubuntu-latest
 
+    # Ce job ne démarre QUE si le job "build" a réussi
+    # → garantit que seul un code validé est déployé
+    needs: build
+
     steps:
-      # =========================
       # 1. Récupération du code
-      # =========================
       - name: Checkout repository
         # Clone le dépôt GitHub sur le runner
-        # Nécessaire pour accéder aux fichiers (docker-compose, action VPN, etc.)
+        # Nécessaire pour accéder aux fichiers (.github/actions/vpn, etc.)
         uses: actions/checkout@v5
 
-      # =========================
+        # Téléchargement de l'Artifact
+      - name: Download artifact
+        use: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
+
       # 2. Connexion au VPN
-      # =========================
       - name: VPN setup
         # Utilise l’action VPN fournie par l’enseignant
-        # Elle installe openconnect et établit le tunnel VPN Fortinet
+        # Elle installe openconnect et établit le tunnel VPN
         uses: ./.github/actions/vpn
         with:
-          # Adresse du serveur VPN
+          # Adresse du serveur VPN Fortinet
           host: ${{ secrets.VPN_HOST }}
 
-          # Port du VPN (généralement 443)
+          # Port du VPN (souvent 443)
           port: ${{ secrets.VPN_PORT }}
 
           # Identifiant VPN
           username: ${{ secrets.VPN_USERNAME }}
 
-          # Mot de passe VPN (stocké dans les secrets GitHub)
+          # Mot de passe VPN (stocké en secret)
           password: ${{ secrets.VPN_PASS }}
 
-          # IP interne à pinguer pour vérifier que le VPN est bien actif
-          # Ici : la VM de PRODUCTION
-          ping_host: ${{ secrets.PROD_HOST_IP }}
+          # IP interne à pinguer pour vérifier que le VPN fonctionne
+          # Ici : la VM TEST
+          ping_host: ${{ secrets.TEST_HOST_IP }}
 
-      # =========================
-      # 3. Déploiement PRODUCTION
-      # =========================
-      - name: Deploy to PROD VM
-        # Action permettant d’exécuter des commandes à distance via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      # 3. Déploiement sur la VM TEST
+      - name: Copy files SSH (SCP)
+        # Action permettant d’exécuter des commandes SSH sur un serveur distant
+        uses: appleboy/scp-action@v1
         with:
-          # Adresse IP de la VM de production (accessible uniquement via VPN)
-          host: ${{ secrets.PROD_HOST_IP }}
+          # Adresse IP de la VM TEST (accessible UNIQUEMENT via VPN)
+          host: ${{ secrets.TEST_HOST_IP }}
 
           # Utilisateur SSH
-          username: ${{ secrets.PROD_SSH_USER }}
+          username: ${{ secrets.TEST_SSH_USER }}
 
-          # Mot de passe SSH (stocké dans les secrets)
-          password: ${{ secrets.PROD_SSH_PASS }}
+          # Mot de passe SSH (fourni par l’enseignant)
+          password: ${{ secrets.TEST_SSH_PASS }}
 
-          # Port SSH standard
-          port: 22
+          # Port SSH
+          port: ${{ secrets.SSH_PORT }}
 
-          # Commandes exécutées directement sur la VM de production
+          source: "./frontend/dist,/backend,docker-compose.yaml"
+          target: ~/todo-app2
+
+      # Tout s'éxécute sur la VM maintenant
+      - name: SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.TEST_HOST_IP }}
+          username: ${{ secrets.TEST_USERNAME }}
+          password: ${{ secrets.TEST_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
-            # Message informatif dans les logs
-            echo "Deploying PRODUCTION environment"
-
-            # Accès au dossier du projet sur la VM
-            cd ~/todo-app || exit 1
-
-            # Récupération de la dernière version du code validé
-            git pull origin main
-
-            # Arrêt et suppression des conteneurs existants
-            # Garantit un environnement propre
-            docker-compose -f docker-compose.prod.yml down
-
-            # Reconstruction des images Docker et redémarrage des services
-            # Le déploiement est entièrement automatisé après le déclenchement manuel
-            docker-compose -f docker-compose.prod.yml up -d --build
-
-            # Confirmation de fin de déploiement
-            echo "PRODUCTION deployment completed"
+            cd ~/todo-app2/backend
+            echo 'DB_URL="${{ secrets.DB_URL }}"' > .env
+            cd ~/todo-app2
+            docker compose up -d
+            cd ~/todo-app2/backend
+            npm run start:prod
+            pm2 save

@@ -235,8 +235,8 @@ jobs:
     # (backend, frontend et tests E2E)
     needs:
       - backend
-      #- frontend
-      #- e2e
+      - frontend
+      - e2e
 
     # Liste des étapes exécutées dans l’ordre
     steps:
@@ -280,8 +280,91 @@ jobs:
         run: npm run build
 
       # Création de l'artifact (Upload) pour les tests
-      #- name: Upload artifact
-      # uses: actions/upload-artifact@v4
-      # with:
-      #  name: Artifact Upload
-      # path: frontend/dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact
+          path: frontend/dist
+
+  deploy-test:
+    # Nom du job affiché dans GitHub Actions
+    name: Deploy production
+
+    # Le job s’exécute sur une VM Linux fournie par GitHub
+    runs-on: ubuntu-latest
+
+    # Ce job ne démarre QUE si le job "build" a réussi
+    # → garantit que seul un code validé est déployé
+    needs: build
+
+    steps:
+      # 1. Récupération du code
+      - name: Checkout repository
+        # Clone le dépôt GitHub sur le runner
+        # Nécessaire pour accéder aux fichiers (.github/actions/vpn, etc.)
+        uses: actions/checkout@v5
+
+        # Téléchargement de l'Artifact
+      - name: Download artifact
+        use: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
+
+      # 2. Connexion au VPN
+      - name: VPN setup
+        # Utilise l’action VPN fournie par l’enseignant
+        # Elle installe openconnect et établit le tunnel VPN
+        uses: ./.github/actions/vpn
+        with:
+          # Adresse du serveur VPN Fortinet
+          host: ${{ secrets.VPN_HOST }}
+
+          # Port du VPN (souvent 443)
+          port: ${{ secrets.VPN_PORT }}
+
+          # Identifiant VPN
+          username: ${{ secrets.VPN_USERNAME }}
+
+          # Mot de passe VPN (stocké en secret)
+          password: ${{ secrets.VPN_PASS }}
+
+          # IP interne à pinguer pour vérifier que le VPN fonctionne
+          # Ici : la VM TEST
+          ping_host: ${{ secrets.TEST_HOST_IP }}
+
+      # 3. Déploiement sur la VM TEST
+      - name: Copy files SSH (SCP)
+        # Action permettant d’exécuter des commandes SSH sur un serveur distant
+        uses: appleboy/scp-action@v1
+        with:
+          # Adresse IP de la VM TEST (accessible UNIQUEMENT via VPN)
+          host: ${{ secrets.TEST_HOST_IP }}
+
+          # Utilisateur SSH
+          username: ${{ secrets.TEST_SSH_USER }}
+
+          # Mot de passe SSH (fourni par l’enseignant)
+          password: ${{ secrets.TEST_SSH_PASS }}
+
+          # Port SSH
+          port: ${{ secrets.SSH_PORT }}
+
+          source: "./frontend/dist,/backend,docker-compose.yaml"
+          target: ~/todo-app2
+
+      # Tout s'éxécute sur la VM maintenant
+      - name: SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.TEST_HOST_IP }}
+          username: ${{ secrets.TEST_USERNAME }}
+          password: ${{ secrets.TEST_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/todo-app2/backend
+            echo 'DB_URL="${{ secrets.DB_URL }}"' > .env
+            cd ~/todo-app2
+            docker compose up -d
+            cd ~/todo-app2/backend
+            npm run start:prod
+            pm2 save
